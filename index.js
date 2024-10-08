@@ -4,6 +4,16 @@ const ejs = require('ejs');
 const mongoose = require('mongoose');
 const fileUpload = require('express-fileupload');
 const BlogPost = require('./models/BlogPost');
+const newPostController = require('./controllers/newPost');
+const storePostController = require('./controllers/storePost');
+const getPostController = require('./controllers/getPost');
+const pagesController = require('./controllers/pagesController');
+const homeController = require('./controllers/home');
+const newUserController = require('./controllers/newUser');
+const storeUserController = require('./controllers/storeUser');
+const loginController = require('./controllers/login');
+const loginUserController = require('./controllers/loginUser');
+const validateMiddleWare = require('./middleware/validationMiddleware');
 
 //initialise express
 const app = new express();
@@ -11,70 +21,43 @@ const app = new express();
 //connecting to the database
 mongoose.connect('mongodb://0.0.0.0:27017/blog_db',
     { useNewUrlParser: true }
-);
-
-const customMiddleware = (req, res, next) => {
-    console.log("Custom Middleware called");
-    next();
-};
-//validation middleware
-const validateMiddleWare = (req,res,next)=>{
-    //makes the title anf image fields required
-    if(req.files == null || req.body.title == null){ return res.redirect('/posts/new')
-    }
-    next()
- }
+); 
 
 //middleware functions
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(fileUpload());
-app.use(customMiddleware);
 app.use('/posts/store',validateMiddleWare);
 
 //setting templating engine to ejs
 app.set('view engine', 'ejs')
 
-app.get('/', async (req, res) => {
-    const blogposts = await BlogPost.find({});
-    res.render('index', { blogposts });
-});
+//user routes
+app.get('/auth/register', newUserController);
 
-app.get('/about', (req, res) => {
-    res.render('about');
-});
+app.post('/users/register', storeUserController);
 
+app.get('/auth/login', loginController);
+
+app.post('/users/login',loginUserController);
+
+app.get('/', homeController);
+
+app.get('/about', pagesController.about);
+
+//post routes
 //view post by id
-app.get('/post/:id', async (req, res) => {
-    const blogpost = await BlogPost.findById(req.params.id);
-    res.render('post', {
-        blogpost
-    });
-});
+app.get('/post/:id', getPostController);
 
 //create new post
-app.get('/posts/new', (req, res) => {
-    res.render('create')
-});
+app.get('/posts/new', newPostController);
 
 //stores post in database
 //redirects us to home page
-app.post('/posts/store', (req, res) => {
-    let image = req.files.image;
-    image.mv(path.resolve(__dirname, 'public/assets/img', image.name),
-        async (error) => {
-            await BlogPost.create({
-                ...req.body,
-                image: "/assets/img/" + image.name
-            });
-            res.redirect('/');
-        });
-});
+app.post('/posts/store', storePostController);
 
-app.get('/contact', (req, res) => {
-    res.render('contact');
-});
+app.get('/contact', pagesController.contact);
 
 //set port to listen on
 app.listen(4000, () => {
