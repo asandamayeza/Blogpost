@@ -19,7 +19,7 @@ const validateMiddleWare = require('./middleware/validationMiddleware');
 const app = new express();
 
 //connecting to the database
-mongoose.connect('mongodb://0.0.0.0:27017/blog_db',
+mongoose.connect('mongodb+srv://asandamayeza:3jTnAxr3vHJLJd1N@test-cluster.s11yd.mongodb.net/blog_db',
     { useNewUrlParser: true }
 ); 
 
